@@ -17,6 +17,7 @@
  - https://sno.phy.queensu.ca/~phil/exiftool/TagNames/EXIF.html
 ``` */
 
+#include <type_traits>
 #include <cstdint>
 #include <cstring>
 #include <stdexcept>
@@ -34,6 +35,10 @@
 #include "bb/debug.hpp"
 
 namespace bbexif {
+    // usage: e.g. template<typename _T, enable_if_type<_T, syd::is_pointer> = nullptr>
+    template <typename _T, template <typename> class type_check>
+    using enable_if_type = typename std::enable_if<type_check<_T>::value, std::nullptr_t>::type;
+    
     struct jfif_segment_header_t {
         uint16_t marker_code;
         uint16_t data_length;
@@ -91,9 +96,9 @@ namespace bbexif {
         inline ifd_tag_type_t type() const { return type_; }
         inline size_t value_count() const { return value_count_; }
         inline std::vector<char> const& data() const { return data_; }
-        template <typename _T>
+        template <typename _T, enable_if_type<_T, std::is_pointer> = nullptr>
         inline _T value_ptr() const { return reinterpret_cast<_T>(data_.data()); }
-        template <typename _T>
+        template <typename _T, enable_if_type<_T, std::is_pointer> = nullptr>
         inline _T value_ptr() { return reinterpret_cast<_T>(data_.data()); }
     };
     
