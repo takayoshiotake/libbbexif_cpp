@@ -91,7 +91,10 @@ namespace bbexif {
         inline ifd_tag_type_t type() const { return type_; }
         inline size_t value_count() const { return value_count_; }
         inline std::vector<char> const& data() const { return data_; }
-        inline char const* value_ptr() const { return data_.data(); }
+        template <typename _T>
+        inline _T value_ptr() const { return reinterpret_cast<_T>(data_.data()); }
+        template <typename _T>
+        inline _T value_ptr() { return reinterpret_cast<_T>(data_.data()); }
     };
     
     using ifd_t = std::map<ifd_tag_id_t, ifd_value_t>;
@@ -352,7 +355,7 @@ namespace bbexif {
             if (ifd.count(exif_ifd_tag_id)) {
                 auto& sub_ifd_tag = ifd.at(exif_ifd_tag_id);
                 if (sub_ifd_tag.type() == ifd_tag_type_t::long_) {
-                    auto offset = *reinterpret_cast<uint32_t const*>(sub_ifd_tag.value_ptr());
+                    auto offset = *sub_ifd_tag.value_ptr<uint32_t const*>();
                     bb::memory_reader sub_ifd_mr(mr.ptr() + offset, mr.available(offset));
                     exif = bb::read<ifd_t>(sub_ifd_mr, bo);
                 }
@@ -360,7 +363,7 @@ namespace bbexif {
             if (ifd.count(gps_ifd_tag_id)) {
                 auto& sub_ifd_tag = ifd.at(gps_ifd_tag_id);
                 if (sub_ifd_tag.type() == ifd_tag_type_t::long_) {
-                    auto offset = *reinterpret_cast<uint32_t const*>(sub_ifd_tag.value_ptr());
+                    auto offset = *sub_ifd_tag.value_ptr<uint32_t const*>();
                     bb::memory_reader sub_ifd_mr(mr.ptr() + offset, mr.available(offset));
                     gps = bb::read<ifd_t>(sub_ifd_mr, bo);
                 }
@@ -376,8 +379,8 @@ namespace bbexif {
                 auto& thumbnail_offset_tag = ifd.at(thumbnail_offset_tag_id);
                 auto& thumbnail_length_tag = ifd.at(thumbnail_length_tag_id);
                 if (thumbnail_offset_tag.type() == ifd_tag_type_t::long_ && thumbnail_length_tag.type() == ifd_tag_type_t::long_) {
-                    auto offset = *reinterpret_cast<uint32_t const*>(thumbnail_offset_tag.value_ptr());
-                    auto length = *reinterpret_cast<uint32_t const*>(thumbnail_length_tag.value_ptr());
+                    auto offset = *thumbnail_offset_tag.value_ptr<uint32_t const*>();
+                    auto length = *thumbnail_length_tag.value_ptr<uint32_t const*>();
                     if (mr.available(offset) >= length) {
                         thumbnail.resize(length);
                         mr.peek(offset, reinterpret_cast<uint8_t*>(thumbnail.data()), thumbnail.size());
