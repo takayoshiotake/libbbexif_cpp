@@ -98,6 +98,8 @@ namespace bbexif {
         inline std::vector<char> const& data() const { return data_; }
         template <typename _T, enable_if_type<_T, std::is_pointer> = nullptr>
         inline _T value_ptr() const { return reinterpret_cast<_T>(data_.data()); }
+        
+        inline std::vector<char>& data() { return data_; }
         template <typename _T, enable_if_type<_T, std::is_pointer> = nullptr>
         inline _T value_ptr() { return reinterpret_cast<_T>(data_.data()); }
     };
