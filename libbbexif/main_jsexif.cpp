@@ -10,34 +10,107 @@
 
 #include <string>
 #include <vector>
+#include <list>
 #include <iostream>
+#include <sstream>
 
 #include "bbexif.hpp"
 
-int main(int argc, char const* argv[]) {
-    static std::string const tool_name = "jsexif";
-    static std::string const tool_usage = "usage: jsexif jpeg_file [-html]";
-    
-    bool outputs_html = false;
-    if (argc < 2) {
-        std::cout << tool_usage << std::endl;
+#define COMMAND_NAME "jsexif"
+
+struct lines {
+    std::string _str;
+    lines(std::vector<std::string> lines)
+    : _str([&]() {
+        std::stringstream ss;
+        for (auto const& line: lines) {
+            ss << line << std::endl;
+        }
+        return ss.str();
+    }()) {}
+    std::string const& str() const { return _str; }
+};
+
+int jsexif(std::list<std::string>& args);
+int jsexif_read(std::list<std::string>& args);
+
+void show_jsexif_version() {
+    std::cout << "jsexif version 1.0" << std::endl;
+}
+
+void show_jsexif_help() {
+    std::cout << lines({
+        "Usage: " COMMAND_NAME " [options] <subcommands> ...",
+        "",
+        "Options:",
+        "  -h, --help  Show this help message and exit",
+        "  --version   Show the jsexif version",
+        "",
+        "Subcommands:",
+        "  read  Show the exif tags as json",
+    }).str() << std::endl;
+}
+
+void show_jsexif_read_help() {
+    std::cout << lines({
+        "Usage: " COMMAND_NAME " read <jpeg_file> [options]",
+        "",
+        "Options:",
+        "  --html  Output sample html displays exif json",
+    }).str() << std::endl;
+}
+
+int jsexif(std::list<std::string>& args) {
+    if (args.size() == 0) {
+        show_jsexif_help();
         return 0;
     }
-    // Suppress warning: Loop will run at most once...
-//    for (auto i = 2; i < argc; ++i) {
-    for (auto i = 2; i < argc;) {
-        if (std::string(argv[i]).compare("-html") == 0) {
+    
+    // [options]
+    if (args.front().compare("-help") == 0 || args.front().compare("--help") == 0) {
+        show_jsexif_help();
+        return 0;
+    }
+    else if (args.front().compare("--version") == 0) {
+        show_jsexif_version();
+        return 0;
+    }
+    
+    // <subcommands>
+    auto subcommand = args.front();
+    args.pop_front();
+    if (subcommand.compare("read") == 0) {
+        return jsexif_read(args);
+    }
+    else {
+        show_jsexif_help();
+        return 0;
+    }
+    
+    return 0;
+}
+
+int jsexif_read(std::list<std::string>& args) {
+    if (args.size() == 0) {
+        show_jsexif_read_help();
+        return 0;
+    }
+    
+    auto filepath = args.front();
+    args.pop_front();
+    
+    bool outputs_html = false;
+    for (auto const& option: args) {
+        if (option.compare("--html") == 0) {
             outputs_html = true;
-            break;
         }
         else {
-            std::cout << tool_name << ": Illegal option: " << argv[i] << std::endl;
-            std::cout << tool_usage << std::endl;
-            return -1;
+            std::cout << COMMAND_NAME << ": Illegal option: " << option << std::endl;
+            show_jsexif_help();
+            return 0;
         }
     }
     
-    std::string const filepath(argv[1]);
     try {
         auto exif = bbexif::read_exif(filepath);
         if (outputs_html) {
@@ -53,9 +126,17 @@ int main(int argc, char const* argv[]) {
         }
     }
     catch (std::exception const& e) {
-        std::cout << tool_name << ": Error: " << e.what() << std::endl;
+        std::cout << COMMAND_NAME << ": Error: " << e.what() << std::endl;
         return -1;
     }
     
     return 0;
+}
+
+int main(int argc, char const* argv[]) {
+    std::list<std::string> args;
+    for (auto i = 1; i < argc; ++i) {
+        args.push_back(argv[i]);
+    }
+    return jsexif(args);
 }
