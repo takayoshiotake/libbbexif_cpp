@@ -323,7 +323,7 @@ namespace bbexif {
             switch (byte_order) {
             case 0x4949: // "II"
                 return bb::byte_order_t::little_endian;
-            case 0x4A4A: // "MM"
+            case 0x4D4D: // "MM"
                 return bb::byte_order_t::big_endian;
             default:
                 throw std::runtime_error(bb_trace_message("Exif not found"));
