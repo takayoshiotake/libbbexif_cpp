@@ -269,7 +269,7 @@ namespace bbexif {
     
     exif_t read_exif(std::string const& filepath) {
         std::ifstream ifs;
-        ifs.open(filepath);
+        ifs.open(filepath, std::ios::binary);
         if (!ifs.is_open()) {
             throw std::runtime_error(bb_trace_message("Unable to open the file: %s", filepath.c_str()));
         }
@@ -357,7 +357,7 @@ namespace bbexif {
         ifd_t gps;
         if (ifds.size() >= 1) {
             static ifd_tag_id_t const exif_ifd_tag_id = 0x8769;
-            static ifd_tag_id_t const gps_ifd_tag_id = 0x8852;
+            static ifd_tag_id_t const gps_ifd_tag_id = 0x8825;
             auto& ifd = ifds[0];
             if (ifd.count(exif_ifd_tag_id)) {
                 auto& sub_ifd_tag = ifd.at(exif_ifd_tag_id);
